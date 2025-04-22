@@ -1,12 +1,9 @@
-from word_mention import check_words_in_lists
+from word_mention import check_words_from_list
 import json
 from pymystem3 import Mystem
 
 with open('word_lists_20250414.json', 'r', encoding='utf-8') as file:
     word_lists = json.load(file)
-
-# for i, list in enumerate(word_lists):
-#     print(i, list)
 
 test_text = """
 ### Текст о коррупции и финансовых системах
@@ -25,6 +22,7 @@ test_text = """
 """
 
 m = Mystem()
-counts, result = check_words_in_lists(stem=m, text=test_text, threshold=2, word_lists=word_lists)
-print(f"Счетчики: {counts}")
-print(f"Результат: {result}")
+words, counts, unique_counts = check_words_from_list(stem=m, text=test_text, word_list=word_lists[0])
+print(f'Совпавшие слова: {words}')
+print(f"Всего совпавших слов: {counts}")
+print(f"Уникальных совпавших слов: {unique_counts}")
