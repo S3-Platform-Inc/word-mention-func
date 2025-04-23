@@ -21,8 +21,11 @@ test_text = """
 Для борьбы с **преступностью** и **незаконными действиями** необходимы **строгий контроль**, **отчетность** и **соблюдение этических норм**. Только так можно обеспечить прозрачность и доверие к финансовым институтам.
 """
 
+test_text2 = 'Текст с коррупцией и махинацией'
+
+
 m = Mystem()
-words, counts, unique_counts = check_words_from_list(stem=m, text=test_text, word_list=word_lists[0])
+words, counts, unique_counts = check_words_from_list(stem=m, text=test_text2, word_list=word_lists[0])
 print(f'Совпавшие слова: {words}')
 print(f"Всего совпавших слов: {counts}")
 print(f"Уникальных совпавших слов: {unique_counts}")

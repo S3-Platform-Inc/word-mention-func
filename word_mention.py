@@ -2,17 +2,31 @@ import time
 from tqdm import tqdm
 
 
-def check_words_from_list(stem, text, word_list):
+def check_words_from_list(stem, text, word_list, lemmatize_words_from_list = True):
     """
-    Проверяет, содержит ли текст словосочетания/слова из списков в любой форме,
-    возвращает общее количество вхождений по каждому списку и результат проверки порога.
+        Анализирует текст на наличие слов/фраз из заданного списка с учетом лемматизации.
 
-    Args:
-        text (str): Проверяемый текст.
-        word_list: Списки с словами/фразами в начальной форме.
+        Функция выполняет:
 
-    Returns:
-        tuple: ttt
+            1. Лемматизацию всего текста для приведения слов к начальной форме
+
+            2. Поиск вхождений слов/фраз из списка:
+           - Для отдельных слов проверяет совпадение лемм
+           - Для словосочетаний ищет последовательности лемм
+
+            3. Подсчет общего и уникального количества совпадений
+
+        Args:
+            stem (Mystem): Экземпляр Mystem для лемматизации
+            text (str): Анализируемый текст
+            word_list (list): Список слов/фраз для поиска
+            lemmatize_words_from_list (bool) = True: Необходимость лемматизации отдельных слов из списка
+
+        Returns:
+            tuple:
+                - list: Все совпавшие элементы из word_list
+                - int: Общее количество совпадений
+                - int: Количество уникальных совпадений
     """
 
     print('Лемматизация текста...')
@@ -37,7 +51,10 @@ def check_words_from_list(stem, text, word_list):
                     mentioned_words.append(item)
         else:  # Обработка отдельных слов
             # Лемматизация элемента списка слов
-            lemma = stem.lemmatize(item.lower())[0]
+            if lemmatize_words_from_list:
+                lemma = stem.lemmatize(item.lower())[0]
+            else:
+                lemma = item
             # Подсчет вхождений этого слова в текст
             for text_lemma in text_lemmas:
                 if text_lemma == lemma:
