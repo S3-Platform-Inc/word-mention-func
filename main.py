@@ -25,7 +25,12 @@ test_text2 = 'Текст с коррупцией и махинацией'
 
 
 m = Mystem()
-words, counts, unique_counts = check_words_from_list(stem=m, text=test_text2, word_list=word_lists[0])
+words, counts, unique_counts = check_words_from_list(stem=m, text=test_text, word_list=word_lists[0])
 print(f'Совпавшие слова: {words}')
 print(f"Всего совпавших слов: {counts}")
 print(f"Уникальных совпавших слов: {unique_counts}")
+
+words2, counts2, unique_counts2 = check_words_from_list(stem=m, text=test_text, word_list=word_lists[1])
+print(f'Совпавшие слова: {words2}')
+print(f"Всего совпавших слов: {counts2}")
+print(f"Уникальных совпавших слов: {unique_counts2}")
