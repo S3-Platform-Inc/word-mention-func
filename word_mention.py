@@ -2,9 +2,9 @@ import time
 
 from flashtext import KeywordProcessor
 from collections import defaultdict
-from tqdm import tqdm
 from pymystem3 import Mystem
 
+from errors import TextIsNull
 from static import KeywordList, FoundKeywords
 
 
@@ -22,6 +22,9 @@ def check_words_from_list(text: str, word_list: KeywordList, lemmatize_words = T
 
             3. Подсчет общего и уникального количества совпадений
     """
+
+    if not isinstance(text, str):
+        raise TextIsNull()
 
     stem = Mystem()
 

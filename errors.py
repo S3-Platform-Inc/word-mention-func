@@ -10,3 +10,15 @@ class NotFoundDocument(Exception):
         self.did = document_id
         self.message = f"Not found document by ID: {document_id}"
         super().__init__(self.message)
+
+
+class TextIsNull(Exception):
+    """Exception raised for errors.
+
+    Attributes:
+        message -- explanation of the error
+    """
+
+    def __init__(self):
+        self.message = f"Text is null"
+        super().__init__(self.message)

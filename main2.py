@@ -20,14 +20,14 @@ kws = kw_load()
 while True:
     try:
         for event in outbox.events():
-            print(event)
+            if not isinstance(event.document.text, str):
+                outbox.error(event, "text field is not a string")
+                continue
             for kw in kws:
                 fk = check_words_from_list(text=event.document.text, word_list=kw)
-                print(fk)
                 func.save(event, fk)
             outbox.success(event)
     except NotFoundDocument as error:
-        print(error)
         time.sleep(5)
 
 
