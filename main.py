@@ -1,33 +1,55 @@
-from static import KeywordList
+import logging
+import os
+import time
+
+from dotenv import load_dotenv
+
+from config import kw_load
+from errors import NotFoundDocument
 from word_mention import check_words_from_list
-import json
-from pymystem3 import Mystem
 
-with open('config.json', 'r', encoding='utf-8') as file:
-    word_lists = json.load(file)
+# Logging
+logging.basicConfig(
+    level=logging.DEBUG,
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+    handlers=[
+        logging.StreamHandler()  # Вывод в stdout (cmd)
+    ]
+)
+logger = logging.getLogger(__name__)
+logger.info("Word-mention-func start & check environment")
 
-test_text = """
-### Текст о коррупции и финансовых системах
+# load .env
+load_dotenv()
+logger.debug(".env loaded")
 
-**Коррупция и незаконные схемы** остаются серьезной проблемой в различных сферах, включая **финансовый сектор**. **Мошенничество**, **взятки**, **подкуп**, **откаты** и **отмывание денег** — все это подрывает доверие к государственным и коммерческим структурам. **Коррупционеры** и **аферисты** часто действуют **безнаказанно**, используя **серые схемы**, **фальсификации** и **сокрытие доходов**.
+from connector import S3PDatabaseOutbox, S3PDatabaseFunction
 
-**Непрозрачность** в принятии решений, **кумовство**, **протекционизм** и **конфликт интересов** создают условия для **злоупотреблений**. **Махинации** с **тендерами**, **закулисные сделки** и **лоббирование** интересов отдельных групп искажают принципы честной **конкуренции**.
+# DB connect
+outbox = S3PDatabaseOutbox(5)
+func = S3PDatabaseFunction(outbox)
 
-### **Национальные платежные системы**
-
-В России функционируют **Национальная система платежных карт (НСПК)** и **платежная система "Мир" (ПС Мир)**, обеспечивающие независимость финансовых операций. **Операционный и платежный клиринговый центр (ОПКЦ)** поддерживает работу этих систем.
-
-Также развивается **Система быстрых платежей (СБП)**, позволяющая совершать мгновенные переводы. Однако даже в таких высокотехнологичных системах возможны **криминальные схемы**, **фиктивные операции** и **манипуляции**.
-
-Для борьбы с **преступностью** и **незаконными действиями** необходимы **строгий контроль**, **отчетность** и **соблюдение этических норм**. Только так можно обеспечить прозрачность и доверие к финансовым институтам.
-"""
-
-test_text2 = 'Текст с коррупцией и махинацией'
+outbox.health()
+logger.debug(f"Database is healthy")
 
 
-m = Mystem()
-words = check_words_from_list(text=test_text, word_list=KeywordList('kw_fraud_1', word_lists['kw_fraud_1']))
-print(f'Совпавшие слова: {words}')
+# Keywords
+kws = kw_load()
+logger.debug("keyword lists loaded")
 
-words2 = check_words_from_list(text=test_text, word_list=KeywordList('kw_company_1', word_lists['kw_company_1']))
-print(f'Совпавшие слова: {words2}')
+logger.info("Main loop start")
+while True:
+    try:
+        for event in outbox.events():
+            if not isinstance(event.document.text, str):
+                outbox.error(event, "text field is not a string")
+                logger.warning(f"text field is not a string in document ({event.document.id})")
+                continue
+
+            for kw in kws:
+                fk = check_words_from_list(text=event.document.text, word_list=kw)
+                func.save(event, fk)
+            outbox.success(event)
+    except NotFoundDocument as error:
+        logger.debug(f"Main loop sleep to {os.getenv("PROC_LOOP_DELAY")}")
+        time.sleep(int(os.getenv("PROC_LOOP_DELAY")))

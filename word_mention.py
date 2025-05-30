@@ -1,3 +1,4 @@
+import logging
 import time
 
 from flashtext import KeywordProcessor
@@ -22,6 +23,7 @@ def check_words_from_list(text: str, word_list: KeywordList, lemmatize_words = T
 
             3. Подсчет общего и уникального количества совпадений
     """
+    log = logging.getLogger(__name__)
 
     if not isinstance(text, str):
         raise TextIsNull()
@@ -52,7 +54,8 @@ def check_words_from_list(text: str, word_list: KeywordList, lemmatize_words = T
     start_time = time.time()
     text_lemmas = stem.lemmatize(text.lower())
     clean_text = ' '.join([lem.strip() for lem in text_lemmas if lem.strip()])
-    print(f"Лемматизация выполнена за {time.time() - start_time:.2f} сек.")
+    # print(f"Лемматизация выполнена за {time.time() - start_time:.2f} сек.")
+    log.debug(f"Лемматизация выполнена за {time.time() - start_time:.2f} сек.")
 
     # 3. Поиск ключевых слов
     start_time = time.time()
@@ -63,5 +66,6 @@ def check_words_from_list(text: str, word_list: KeywordList, lemmatize_words = T
     for kw in found_keywords:
         word_counts[kw] += 1
 
-    print(f"Поиск выполнен за {time.time() - start_time:.2f} сек.")
+    # print(f"Поиск выполнен за {time.time() - start_time:.2f} сек.")
+    log.debug(f"Поиск выполнен за {time.time() - start_time:.2f} сек.")
     return FoundKeywords(word_list, dict(word_counts))

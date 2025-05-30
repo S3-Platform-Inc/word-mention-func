@@ -27,6 +27,16 @@ def ps_connection():
         port=PORT
     )
 
+def healthcheck() -> psycopg2.Error:
+    try:
+        with ps_connection() as connection:
+            with connection.cursor() as cursor:
+                cursor.execute('SELECT 1;')
+                if cursor.fetchone()[0] != 1:
+                    raise psycopg2.OperationalError("Database connection test failed")
+    except psycopg2.OperationalError as e:
+        connection.rollback()
+        raise e
 
 def events(limit: int) -> tuple[Event, ...]:
     """
