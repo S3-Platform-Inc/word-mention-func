@@ -1,8 +1,14 @@
 import time
+
+from flashtext import KeywordProcessor
+from collections import defaultdict
 from tqdm import tqdm
+from pymystem3 import Mystem
+
+from static import KeywordList, FoundKeywords
 
 
-def check_words_from_list(stem, text, word_list, lemmatize_words_from_list = True):
+def check_words_from_list(text: str, word_list: KeywordList, lemmatize_words = True) -> FoundKeywords:
     """
         Анализирует текст на наличие слов/фраз из заданного списка с учетом лемматизации.
 
@@ -15,49 +21,44 @@ def check_words_from_list(stem, text, word_list, lemmatize_words_from_list = Tru
            - Для словосочетаний ищет последовательности лемм
 
             3. Подсчет общего и уникального количества совпадений
-
-        Args:
-            stem (Mystem): Экземпляр Mystem для лемматизации
-            text (str): Анализируемый текст
-            word_list (list): Список слов/фраз для поиска
-            lemmatize_words_from_list (bool) = True: Необходимость лемматизации отдельных слов из списка
-
-        Returns:
-            tuple:
-                - list: Все совпавшие элементы из word_list
-                - int: Общее количество совпадений
-                - int: Количество уникальных совпадений
     """
 
-    print('Лемматизация текста...')
-    start_time = time.time()
-    text_lemmas = stem.lemmatize(text.lower())  # Лемматизация всего текста (список из нач. форм)
-    end_time = time.time()
-    print(f"Лемматизация текста выполнена! ({(end_time - start_time)} с.)")
+    stem = Mystem()
 
+    # 1. Подготовка ключевых слов
+    keyword_processor = KeywordProcessor(case_sensitive=False)
+    keyword_dict = {}
 
-    mentioned_words = []
-    # Цикл по элементам списка слов
-    for item in tqdm(word_list, desc=f'Обработка слов из списка'):
-        if ' ' in item:  # Обработка словосочетаний (если есть пробел в элементе списка)
-            phrase_lemmas = stem.lemmatize(item.lower())  # список из нач. форм слов в словосочетании
-            phrase_lemmas = [p for p in phrase_lemmas if p.isalnum()] # исключение из списка пробелов и переносов
-            len_p = len(phrase_lemmas) # длина словосочетания
-            # Поиск всех вхождений фразы
-            # Цикл по длине всего текста
-            for i in range(len(text_lemmas) - len_p + 1):
-                # Если фрагмент текста с i-го места до i+len_p (длина словосочетания) совпадает со словосочетанием из списка
-                if text_lemmas[i:i + len_p] == phrase_lemmas:
-                    mentioned_words.append(item)
-        else:  # Обработка отдельных слов
-            # Лемматизация элемента списка слов
-            if lemmatize_words_from_list:
+    for item in word_list.elements:
+        if lemmatize_words:
+            # Лемматизация для отдельных слов
+            if ' ' not in item:
                 lemma = stem.lemmatize(item.lower())[0]
+                keyword_dict[lemma] = item
+            # Для фраз лемматизируем каждое слово
             else:
-                lemma = item
-            # Подсчет вхождений этого слова в текст
-            for text_lemma in text_lemmas:
-                if text_lemma == lemma:
-                    mentioned_words.append(item)
+                phrase_lemmas = [stem.lemmatize(w.lower())[0] for w in item.split()]
+                keyword_dict[' '.join(phrase_lemmas)] = item
+        else:
+            keyword_dict[item.lower()] = item
 
-    return mentioned_words, len(mentioned_words), len(set(mentioned_words))
+    for lemmatized_word, original_word in keyword_dict.items():
+        keyword_processor.add_keyword(lemmatized_word, original_word)
+
+    # 2. Лемматизация текста
+    start_time = time.time()
+    text_lemmas = stem.lemmatize(text.lower())
+    clean_text = ' '.join([lem.strip() for lem in text_lemmas if lem.strip()])
+    print(f"Лемматизация выполнена за {time.time() - start_time:.2f} сек.")
+
+    # 3. Поиск ключевых слов
+    start_time = time.time()
+    found_keywords = keyword_processor.extract_keywords(clean_text)
+
+    # 4. Подсчет результатов
+    word_counts = defaultdict(int)
+    for kw in found_keywords:
+        word_counts[kw] += 1
+
+    print(f"Поиск выполнен за {time.time() - start_time:.2f} сек.")
+    return FoundKeywords(word_list, dict(word_counts))

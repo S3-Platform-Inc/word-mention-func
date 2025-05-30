@@ -1,8 +1,9 @@
+from static import KeywordList
 from word_mention import check_words_from_list
 import json
 from pymystem3 import Mystem
 
-with open('word_lists_20250414.json', 'r', encoding='utf-8') as file:
+with open('config.json', 'r', encoding='utf-8') as file:
     word_lists = json.load(file)
 
 test_text = """
@@ -25,12 +26,8 @@ test_text2 = 'Текст с коррупцией и махинацией'
 
 
 m = Mystem()
-words, counts, unique_counts = check_words_from_list(stem=m, text=test_text, word_list=word_lists[0])
+words = check_words_from_list(text=test_text, word_list=KeywordList('kw_fraud_1', word_lists['kw_fraud_1']))
 print(f'Совпавшие слова: {words}')
-print(f"Всего совпавших слов: {counts}")
-print(f"Уникальных совпавших слов: {unique_counts}")
 
-words2, counts2, unique_counts2 = check_words_from_list(stem=m, text=test_text, word_list=word_lists[1])
+words2 = check_words_from_list(text=test_text, word_list=KeywordList('kw_company_1', word_lists['kw_company_1']))
 print(f'Совпавшие слова: {words2}')
-print(f"Всего совпавших слов: {counts2}")
-print(f"Уникальных совпавших слов: {unique_counts2}")
