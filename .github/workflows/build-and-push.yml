@@ -1,4 +1,4 @@
-name: Build and Push S3P Node Image
+name: Build and Push S3P Word Mention Func Image
 
 # Триггеры для запуска workflow
 on:
