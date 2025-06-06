@@ -12,7 +12,7 @@ RUN --mount=type=cache,target=/root/.cache/uv \
     uv sync --locked --no-install-project
 
 # Copy the project into the image
-ADD . /app
+#ADD . /app
 
 # Sync the project
 RUN --mount=type=cache,target=/root/.cache/uv \
